@@ -47,4 +47,14 @@ class FunctionResizeTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($notNullOptions->asHash()['thumbnail']);
         $this->assertTrue($notNullOptions->asHash()['maxOnly']);
     }
+
+    public function testObtainCache()
+    {
+        $this->assertEquals('./cache/', (new Options())->obtainCache());
+    }
+
+    public function testObtainRemote()
+    {
+        $this->assertEquals('./cache/remote/', (new Options())->obtainRemote());
+    }
 }

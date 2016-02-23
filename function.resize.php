@@ -5,10 +5,11 @@ include 'Options.php';
 function resize($imagePath,$opts=null){
 	$imagePath = urldecode($imagePath);
 
-	$opts = (new Options($opts))->asHash();
+	$options = new Options($opts);
+	$opts = $options->asHash();
 
-	$cacheFolder = $opts['cacheFolder'];
-	$remoteFolder = $opts['remoteFolder'];
+	$cacheFolder = $options->obtainCache();
+	$remoteFolder = $options->obtainRemote();
 
 	$path_to_convert = 'convert'; # this could be something like /usr/bin/convert or /opt/local/share/bin/convert
 	
