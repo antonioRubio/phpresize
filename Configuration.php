@@ -1,13 +1,15 @@
 <?php
 
 
-class Options
+class Configuration
 {
-    const CACHE_FOLDER = './cache/';
-    const REMOTE_FOLDER = self::CACHE_FOLDER.'remote/';
+    const CACHE_PATH = './cache/';
+    const REMOTE_PATH = './cache/remote/';
+    const CONVERT_PATH = 'convert';
 
     const CACHE_KEY = 'cacheFolder';
     const REMOTE_KEY = 'remoteFolder';
+
 
     private $opts;
 
@@ -22,8 +24,8 @@ class Options
             'maxOnly' => false,
             'canvas-color' => 'transparent',
             'output-filename' => false,
-            self::CACHE_KEY => self::CACHE_FOLDER,
-            self::REMOTE_KEY => self::REMOTE_FOLDER,
+            self::CACHE_KEY => self::CACHE_PATH,
+            self::REMOTE_KEY => self::REMOTE_PATH,
             'quality' => 90,
             'cache_http_minutes' => 20
         );
@@ -44,6 +46,11 @@ class Options
     public function obtainRemote()
     {
         return $this->opts[self::REMOTE_KEY];
+    }
+
+    public function obtainConvertPath()
+    {
+        return self::CONVERT_PATH;
     }
 
     private function sanitize($opts)

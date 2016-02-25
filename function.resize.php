@@ -1,29 +1,27 @@
 <?php
 
-include 'Options.php';
+include 'Configuration.php';
+include 'ImagePath.php';
+include 'Resizer.php';
 
-function resize($imagePath,$opts=null){
-	$imagePath = urldecode($imagePath);
+function sanitize($path) {
+	return urldecode($path);
+}
 
-	$options = new Options($opts);
-	$opts = $options->asHash();
+function resize($imagePath, $opts=null){
+	$path = new ImagePath($imagePath);
+	$configuration = new Configuration($opts);
 
-	$cacheFolder = $options->obtainCache();
-	$remoteFolder = $options->obtainRemote();
+	$resizer = new Resizer($path, $configuration);
 
-	$path_to_convert = 'convert'; # this could be something like /usr/bin/convert or /opt/local/share/bin/convert
-	
-	## you shouldn't need to configure anything else beyond this point
+	$opts = $configuration->asHash();
+	$imagePath = $path->sanitizedPath();
 
-	$purl = parse_url($imagePath);
-	$finfo = pathinfo($imagePath);
-	$ext = $finfo['extension'];
 
-	# check for remote image..
-	if(isset($purl['scheme']) && ($purl['scheme'] == 'http' || $purl['scheme'] == 'https')):
-		# grab the image, and cache it so we have something to work with..
-		list($filename) = explode('?',$finfo['basename']);
-		$local_filepath = $remoteFolder.$filename;
+
+	if($path->isHttpProtocol()):
+		$filename = $path->obtainFilename();
+		$local_filepath = $configuration->obtainRemote() .$filename;
 		$download_image = true;
 		if(file_exists($local_filepath)):
 			if(filemtime($local_filepath) < strtotime('+'.$opts['cache_http_minutes'].' minutes')):
@@ -53,12 +51,14 @@ function resize($imagePath,$opts=null){
 	if(false !== $opts['output-filename']) :
 		$newPath = $opts['output-filename'];
 	else:
-        if(!empty($w) and !empty($h)):
-            $newPath = $cacheFolder.$filename.'_w'.$w.'_h'.$h.(isset($opts['crop']) && $opts['crop'] == true ? "_cp" : "").(isset($opts['scale']) && $opts['scale'] == true ? "_sc" : "").'.'.$ext;
+		$finfo = pathinfo($imagePath);
+        $ext = $finfo['extension'];
+		if(!empty($w) and !empty($h)):
+            $newPath = $configuration->obtainCache() .$filename.'_w'.$w.'_h'.$h.(isset($opts['crop']) && $opts['crop'] == true ? "_cp" : "").(isset($opts['scale']) && $opts['scale'] == true ? "_sc" : "").'.'. $ext;
         elseif(!empty($w)):
-            $newPath = $cacheFolder.$filename.'_w'.$w.'.'.$ext;	
+            $newPath = $configuration->obtainCache() .$filename.'_w'.$w.'.'. $ext;
         elseif(!empty($h)):
-            $newPath = $cacheFolder.$filename.'_h'.$h.'.'.$ext;
+            $newPath = $configuration->obtainCache() .$filename.'_h'.$h.'.'. $ext;
         else:
             return false;
         endif;
@@ -94,17 +94,17 @@ function resize($imagePath,$opts=null){
 			endif;
 
 			if(true === $opts['scale']):
-				$cmd = $path_to_convert ." ". escapeshellarg($imagePath) ." -resize ". escapeshellarg($resize) . 
+				$cmd = $configuration->obtainConvertPath() ." ". escapeshellarg($imagePath) ." -resize ". escapeshellarg($resize) .
 				" -quality ". escapeshellarg($opts['quality']) . " " . escapeshellarg($newPath);
 			else:
-				$cmd = $path_to_convert." ". escapeshellarg($imagePath) ." -resize ". escapeshellarg($resize) . 
+				$cmd = $configuration->obtainConvertPath() ." ". escapeshellarg($imagePath) ." -resize ". escapeshellarg($resize) .
 				" -size ". escapeshellarg($w ."x". $h) . 
 				" xc:". escapeshellarg($opts['canvas-color']) .
 				" +swap -gravity center -composite -quality ". escapeshellarg($opts['quality'])." ".escapeshellarg($newPath);
 			endif;
 						
 		else:
-			$cmd = $path_to_convert." " . escapeshellarg($imagePath) . 
+			$cmd = $configuration->obtainConvertPath() ." " . escapeshellarg($imagePath) .
 			" -thumbnail ". (!empty($h) ? 'x':'') . $w ."". 
 			(isset($opts['maxOnly']) && $opts['maxOnly'] == true ? "\>" : "") . 
 			" -quality ". escapeshellarg($opts['quality']) ." ". escapeshellarg($newPath);

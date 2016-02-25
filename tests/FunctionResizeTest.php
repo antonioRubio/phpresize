@@ -1,6 +1,6 @@
 <?php
 
-include 'Options.php';
+include 'Configuration.php';
 
 class FunctionResizeTest extends PHPUnit_Framework_TestCase
 {
@@ -23,26 +23,26 @@ class FunctionResizeTest extends PHPUnit_Framework_TestCase
     }
     public function testOpts()
     {
-        $this->assertInstanceOf('Options', new Options);
+        $this->assertInstanceOf('Configuration', new Configuration);
     }
 
     public function testDefaults()
     {
-        $this->assertEquals($this->defaults, (new Options())->asHash());
+        $this->assertEquals($this->defaults, (new Configuration())->asHash());
     }
 
     public function testNullConfiguration()
     {
-        $this->assertEquals($this->defaults, (new Options(null))->asHash());
+        $this->assertEquals($this->defaults, (new Configuration(null))->asHash());
     }
 
     public function testDefaultsNotOverrideConfiguration()
     {
-        $configuration = array(
+        $opts = array(
             'thumbnail' => true,
             'maxOnly' => true
         );
-        $notNullOptions = new Options($configuration);
+        $notNullOptions = new Configuration($opts);
 
         $this->assertTrue($notNullOptions->asHash()['thumbnail']);
         $this->assertTrue($notNullOptions->asHash()['maxOnly']);
@@ -50,11 +50,16 @@ class FunctionResizeTest extends PHPUnit_Framework_TestCase
 
     public function testObtainCache()
     {
-        $this->assertEquals('./cache/', (new Options())->obtainCache());
+        $this->assertEquals('./cache/', (new Configuration())->obtainCache());
     }
 
     public function testObtainRemote()
     {
-        $this->assertEquals('./cache/remote/', (new Options())->obtainRemote());
+        $this->assertEquals('./cache/remote/', (new Configuration())->obtainRemote());
+    }
+
+    public function testObtainConvertPath()
+    {
+        $this->assertEquals('convert', (new Configuration())->obtainConvertPath());
     }
 }
